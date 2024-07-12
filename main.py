@@ -1,24 +1,55 @@
-import discord
+import discord 
 import os
+import openai
 
-token = os.getenv("YOUR_TOKEN")
+file = "1"
+match(file):
+  case "1":
+    file = "chat1.txt"
+  case "2":
+    file = "chat2.txt"
+  case "3": 
+    file = "chat3.txt"
+  case _:
+    print("Invalid choice.")
+    exit()
+    
+with open(file, "r") as f:
+  chat = f.read() 
+
+openai.api_key = os.getenv("PUBLIC_KEY_HERE")
+token = os.getenv("DISCORD_TOKEN_HERE")
 
 class MyClient(discord.Client):
     async def on_ready(self):
-        print('Logged on as', self.user)
+        print(f'Logged on as {self.user}!')
 
     async def on_message(self, message):
-        channel = message.channel
-        await channel.send("hello world!")
-        if message.author == self.user:
-            return
-
-        if message.content == 'ping':
-            await message.channel.send('pong')
+        global chat
+        try:
+          chat += f"{message.author}: {message.content}\n"
+          print(f'Message from {message.author}: {message.content}')
+          if self.user!= message.author:
+              if self.user in message.mentions:
+                response = openai.Completion.create(
+                  model="text-davinci-003",
+                  temperature=1,
+                  max_tokens=256,
+                  top_p=1,
+                  frequency_penalty=0,
+                  presence_penalty=0
+                )
+                channel = message.channel
+                messageToSend = response.choices[0].text
+                await channel.send(messageToSend)    
+        except Exception as e:
+          print(e)
+          chat = ""
+            
+      
 
 intents = discord.Intents.default()
 intents.message_content = True
+
 client = MyClient(intents=intents)
-client.run("YOUR_TOKEN")
-
-
+client.run("DISCORD_TOKEN_HERE")
