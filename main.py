@@ -21,4 +21,3 @@ intents.message_content = True
 client = MyClient(intents=intents)
 client.run("YOUR_TOKEN")
 
-
